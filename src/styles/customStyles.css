@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Color variables */
+  :root {
+    --color-navy-50: #f0f4f9;
+    --color-navy-100: #d9e2ec;
+    --color-navy-200: #bcccdc;
+    --color-navy-300: #9fb3c8;
+    --color-navy-400: #829ab1;
+    --color-navy-500: #627d98;
+    --color-navy-600: #486581;
+    --color-navy-700: #334e68;
+    --color-navy-800: #243b53;
+    --color-navy-900: #102a43;
+    
+    --color-olive-50: #f7f8f5;
+    --color-olive-100: #e6e9e1;
+    --color-olive-200: #d0d6c8;
+    --color-olive-300: #b5c0a9;
+    --color-olive-400: #9bab8c;
+    --color-olive-500: #859778;
+    --color-olive-600: #6a7c60;
+    --color-olive-700: #4e6e58;
+    --color-olive-800: #3a4634;
+    --color-olive-900: #2c3428;
+  }
+}
+
+/* Add custom animation */
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Card hover effect */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
