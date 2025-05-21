@@ -5,7 +5,6 @@ import { useState, useEffect } from "react"
 import { Plus, Search, Package, X } from "lucide-react"
 import { useFilter } from "../contexts/FilterContext.js" // Import FilterContext
 import Button from "../components/ui/Button.js"
-import FilterBar from "../components/layout/FilterBar.js"
 import Card from "../components/ui/Card.js"
 import ErrorBoundary from "../components/ErrorBoundary.js"
 import { purchaseService, baseService, assetService } from "../services/api.js"
@@ -325,8 +324,6 @@ const PurchasesContent: React.FC = () => {
           </div>
         </div>
       )}
-
-      <FilterBar />
 
       <Card>
         <div className="mb-4">

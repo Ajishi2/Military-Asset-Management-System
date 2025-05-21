@@ -6,7 +6,6 @@ import { Plus, Search, Users, X } from "lucide-react"
 import { useFilter } from "../contexts/FilterContext.js"
 import { mockAssignments } from "../data/mockData.js" // Will replace with API call
 import Button from "../components/ui/Button.js"
-import FilterBar from "../components/layout/FilterBar.js"
 import Table from "../components/ui/Table.js"
 import Card from "../components/ui/Card.js"
 import Badge from "../components/ui/Badge.js"
@@ -215,8 +214,6 @@ const Assignments: React.FC = () => {
           </Button>
         </div>
       </div>
-
-      <FilterBar />
 
       <Card>
         <div className="mb-4">

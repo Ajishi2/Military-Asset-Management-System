@@ -6,7 +6,6 @@ import { Plus, Search, Truck, X } from "lucide-react"
 import { useFilter } from "../contexts/FilterContext.js"
 import { mockTransfers } from "../data/mockData.js"
 import Button from "../components/ui/Button.js"
-import FilterBar from "../components/layout/FilterBar.js"
 import Table from "../components/ui/Table.js"
 import Card from "../components/ui/Card.js"
 import Badge from "../components/ui/Badge.js"
@@ -234,8 +233,6 @@ const Transfers: React.FC = () => {
           </Button>
         </div>
       </div>
-
-      <FilterBar />
 
       <Card>
         <div className="mb-4">
