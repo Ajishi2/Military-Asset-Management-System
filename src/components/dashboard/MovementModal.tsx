@@ -1,9 +1,9 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import Button from '../ui/Button';
-import Table from '../ui/Table';
-import { Purchase, Transfer } from '../../types';
-import { mockPurchases, mockTransfers, mockBases } from '../../data/mockData';
+import Button from '../ui/Button.js';
+import Table from '../ui/Table.js';
+import { Purchase, Transfer } from '../../types/index.js';
+
 
 interface MovementModalProps {
   isOpen: boolean;

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext.js';
 import { Shield, Truck, BarChart3, Package, Train as Transfer, Users, LogOut, Menu, X } from 'lucide-react';
 
 const Navbar: React.FC = () => {
-  const { currentUser, logout, hasPermission } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -13,10 +13,10 @@ const Navbar: React.FC = () => {
     { name: 'Purchases', path: '/purchases', icon: <Package size={20} /> },
     { name: 'Transfers', path: '/transfers', icon: <Transfer size={20} /> },
     { name: 'Assignment', path: '/assignments', icon: <Users size={20} /> },
-    // Admin-only links
-    ...(hasPermission('admin') ? [
-      { name: 'Bases', path: '/bases', icon: <Shield size={20} /> },
-    ] : [])
+    // Admin-only links (TODO: add RBAC logic)
+    // ...(user && user.role_id === 1 ? [
+    //   { name: 'Bases', path: '/bases', icon: <Shield size={20} /> },
+    // ] : [])
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -58,10 +58,10 @@ const Navbar: React.FC = () => {
 
           <div className="hidden md:block">
             <div className="ml-4 flex items-center">
-              {currentUser ? (
+              {user ? (
                 <div className="flex items-center">
                   <span className="mr-4 text-sm font-medium">
-                    {currentUser.name} ({currentUser.role.replace('_', ' ')})
+                    {user.username}
                   </span>
                   <button
                     onClick={logout}
@@ -120,21 +120,18 @@ const Navbar: React.FC = () => {
           </div>
           <div className="pt-4 pb-3 border-t border-navy-700">
             <div className="flex items-center px-5">
-              {currentUser && (
+              {user && (
                 <>
                   <div className="ml-3">
                     <div className="text-base font-medium leading-none text-white">
-                      {currentUser.name}
-                    </div>
-                    <div className="text-sm font-medium leading-none text-gray-400 mt-1">
-                      {currentUser.role.replace('_', ' ')}
+                      {user.username}
                     </div>
                   </div>
                 </>
               )}
             </div>
             <div className="mt-3 px-2 space-y-1">
-              {currentUser ? (
+              {user ? (
                 <button
                   onClick={() => {
                     logout();

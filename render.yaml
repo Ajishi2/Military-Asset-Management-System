@@ -1,7 +1,7 @@
 services:
   - type: web
     name: military-asset-management-api
-    env: node
+    runtime: node
     buildCommand: npm install
     startCommand: npm run start
     envVars:

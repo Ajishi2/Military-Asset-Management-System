@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { FilterOptions, EquipmentType } from '../types';
+import { FilterOptions, EquipmentType } from '../types/index.js';
 import { format, subDays } from 'date-fns';
 
 interface FilterContextType {
@@ -10,23 +10,16 @@ interface FilterContextType {
   clearFilters: () => void;
 }
 
-const today = new Date();
-const defaultStartDate = format(subDays(today, 30), 'yyyy-MM-dd');
-const defaultEndDate = format(today, 'yyyy-MM-dd');
-
-const defaultFilters: FilterOptions = {
-  dateRange: {
-    startDate: defaultStartDate,
-    endDate: defaultEndDate
-  },
-  baseId: undefined,
-  assetType: undefined
-};
-
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
 
-export const FilterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [filters, setFilters] = useState<FilterOptions>(defaultFilters);
+// Export the provider as a named export
+export function FilterProvider({ children }: { children: React.ReactNode }) {
+  const [filters, setFilters] = useState<FilterOptions>({
+    dateRange: {
+      startDate: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+      endDate: format(new Date(), 'yyyy-MM-dd'),
+    },
+  });
 
   const setBaseFilter = (baseId: string | undefined) => {
     setFilters(prev => ({ ...prev, baseId }));
@@ -35,7 +28,7 @@ export const FilterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const setDateRangeFilter = (startDate: string, endDate: string) => {
     setFilters(prev => ({
       ...prev,
-      dateRange: { startDate, endDate }
+      dateRange: { startDate, endDate },
     }));
   };
 
@@ -44,26 +37,32 @@ export const FilterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const clearFilters = () => {
-    setFilters(defaultFilters);
+    setFilters({
+      dateRange: {
+        startDate: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+        endDate: format(new Date(), 'yyyy-MM-dd'),
+      },
+    });
   };
 
   return (
-    <FilterContext.Provider value={{ 
-      filters, 
-      setBaseFilter, 
-      setDateRangeFilter, 
-      setAssetTypeFilter, 
-      clearFilters 
+    <FilterContext.Provider value={{
+      filters,
+      setBaseFilter,
+      setDateRangeFilter,
+      setAssetTypeFilter,
+      clearFilters,
     }}>
       {children}
     </FilterContext.Provider>
   );
-};
+}
 
-export const useFilter = () => {
+// Export the hook as a named export
+export function useFilter() {
   const context = useContext(FilterContext);
   if (context === undefined) {
     throw new Error('useFilter must be used within a FilterProvider');
   }
   return context;
-};
+}
