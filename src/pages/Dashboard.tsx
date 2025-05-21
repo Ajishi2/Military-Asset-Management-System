@@ -6,7 +6,7 @@ import FilterBar from '../components/layout/FilterBar.js';
 import MetricsCard from '../components/dashboard/MetricsCard.js';
 import Card from '../components/ui/Card.js';
 import MovementModal from '../components/dashboard/MovementModal.js';
-import axios from 'axios';  
+import api from '../services/api.js';  
 
 interface Base {
   base_id: number;
@@ -28,6 +28,8 @@ interface Metrics {
 }
 
 const Dashboard: React.FC = () => {
+  console.log('Dashboard component mounted');
+  console.log('API base URL:', import.meta.env.VITE_API_BASE_URL);
   const { filters } = useFilter();
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -49,13 +51,14 @@ const Dashboard: React.FC = () => {
 
   // Fetch bases and metrics data
   useEffect(() => {
+    console.log('Dashboard useEffect triggered with filters:', filters);
     const fetchData = async () => {
       try {
         setLoading(true);
         console.log('Fetching dashboard data with filters:', filters);
         
-        // Fetch bases
-        const basesResponse = await axios.get('/api/bases');
+        // Fetch bases using the configured API instance
+        const basesResponse = await api.get('/bases');
         const basesData = basesResponse.data;
         console.log('Bases data:', basesData);
         setBases(basesData);
@@ -89,7 +92,8 @@ const Dashboard: React.FC = () => {
               type_id: filters.assetType || ''
             });
             
-            const metricsResponse = await axios.get('/api/dashboard/metrics', {
+            // Use the configured API instance for metrics
+            const metricsResponse = await api.get('/dashboard/metrics', {
               params: {
                 base_id: baseId,
                 start_date: startDate,
