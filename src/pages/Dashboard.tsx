@@ -10,8 +10,8 @@ import axios from 'axios';
 
 interface Base {
   base_id: number;
-  base_name: string;
-  name?: string;
+  base_name: string; // Changed from 'name' to match API response
+  name?: string;     // Keep as optional for backward compatibility
   location: string;
 }
 
@@ -44,17 +44,20 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Default to first base if none selected
+  // Default to first base if none selected, or use the selected base from filters
   const activeBaseId = filters.baseId || (bases.length > 0 ? bases[0].base_id.toString() : '1');
 
+  // Fetch bases and metrics data
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        console.log('Fetching dashboard data with filters:', filters);
         
         // Fetch bases
         const basesResponse = await axios.get('/api/bases');
         const basesData = basesResponse.data;
+        console.log('Bases data:', basesData);
         setBases(basesData);
         
         // Set default dates if not provided in filters
@@ -65,18 +68,26 @@ const Dashboard: React.FC = () => {
         const startDate = filters.dateRange?.startDate || oneMonthAgo.toISOString().split('T')[0];
         const endDate = filters.dateRange?.endDate || today.toISOString().split('T')[0];
         
-        // Initialize metrics object
+        // Initialize an empty metrics object
         const formattedMetrics: {[key: string]: Metrics} = {};
         
-        // Determine which bases to fetch metrics for
+        // Determine which bases to fetch metrics for based on filters
         const basesToFetch = filters.baseId 
           ? basesData.filter((base: any) => base.base_id.toString() === filters.baseId)
           : basesData;
         
-        // Fetch metrics for each base
+        console.log('Fetching metrics for bases:', basesToFetch.map((b: any) => b.base_name || b.name));
+        
+        // Fetch metrics for filtered bases to populate the graph
         const fetchPromises = basesToFetch.map(async (base: any) => {
           try {
             const baseId = base.base_id.toString();
+            console.log(`Fetching metrics for base ${baseId} with params:`, {
+              base_id: baseId,
+              start_date: startDate,
+              end_date: endDate,
+              type_id: filters.assetType || ''
+            });
             
             const metricsResponse = await axios.get('/api/dashboard/metrics', {
               params: {
@@ -89,7 +100,10 @@ const Dashboard: React.FC = () => {
             
             const metricsData = metricsResponse.data;
             
-            // Calculate totals across all equipment types
+            console.log(`Raw metrics data for base ${baseId}:`, metricsData);
+            
+            // Transform the metrics data into the expected format
+            // Calculate totals across all equipment types for this base
             let totalOpeningBalance = 0;
             let totalClosingBalance = 0;
             let totalPurchases = 0;
@@ -98,6 +112,7 @@ const Dashboard: React.FC = () => {
             let totalAssigned = 0;
             let totalExpended = 0;
             
+            // Process each equipment type's metrics
             if (Array.isArray(metricsData)) {
               metricsData.forEach((item: any) => {
                 totalOpeningBalance += parseInt(item.opening_balance) || 0;
@@ -109,6 +124,7 @@ const Dashboard: React.FC = () => {
                 totalExpended += parseInt(item.total_expended) || 0;
               });
             } else if (metricsData && typeof metricsData === 'object') {
+              // Handle case where API returns a single object instead of an array
               totalOpeningBalance = parseInt(metricsData.opening_balance) || 0;
               totalClosingBalance = parseInt(metricsData.closing_balance) || 0;
               totalPurchases = parseInt(metricsData.total_purchases) || 0;
@@ -118,12 +134,15 @@ const Dashboard: React.FC = () => {
               totalExpended = parseInt(metricsData.total_expended) || 0;
             }
             
-            // Calculate net movement and percent change
+            // Calculate net movement
             const netMovement = totalPurchases + totalTransfersIn - totalTransfersOut;
+            
+            // Calculate percent change from opening to closing balance
             const percentChange = totalOpeningBalance > 0 
               ? ((totalClosingBalance - totalOpeningBalance) / totalOpeningBalance) * 100 
               : 0;
             
+            // Store the calculated totals
             formattedMetrics[baseId] = {
               openingBalance: totalOpeningBalance,
               closing: totalClosingBalance,
@@ -132,15 +151,20 @@ const Dashboard: React.FC = () => {
               transferOut: totalTransfersOut,
               assigned: totalAssigned,
               expended: totalExpended,
-              netMovement,
-              percentChange
+              netMovement: netMovement,
+              percentChange: percentChange
             };
+            
+            console.log(`Calculated metrics for base ${baseId}:`, formattedMetrics[baseId]);
           } catch (err) {
             console.error(`Error fetching metrics for base ${base.base_id}:`, err);
           }
         });
         
+        // Wait for all fetches to complete
         await Promise.all(fetchPromises);
+        
+        console.log('Formatted metrics for all bases:', formattedMetrics);
         setMetrics(formattedMetrics);
         setLoading(false);
       } catch (err) {
@@ -151,26 +175,37 @@ const Dashboard: React.FC = () => {
     };
     
     fetchData();
-  }, [filters]);
+  }, [filters]); // Re-fetch when filters change
 
+  // This function is used when displaying modal titles
   const getBaseNameById = (id: string) => {
     const base = bases.find(b => b.base_id.toString() === id);
     return base ? (base.base_name || base.name) : 'Unknown Base';
   };
 
   const openModal = (baseId: string, type: 'purchases' | 'transfers-in' | 'transfers-out') => {
-    setModalState({ isOpen: true, baseId, type });
+    setModalState({
+      isOpen: true,
+      baseId,
+      type
+    });
   };
 
   const closeModal = () => {
-    setModalState({ ...modalState, isOpen: false });
+    setModalState({
+      ...modalState,
+      isOpen: false
+    });
   };
 
-  // Prepare chart data
+  // Prepare chart data from real API data
+  // If a base filter is applied, only show that base, otherwise show all bases
   const basesToShow = filters.baseId 
     ? bases.filter(base => base.base_id.toString() === filters.baseId)
     : bases;
     
+  console.log('Bases to show in chart:', basesToShow.map(b => b.base_name || b.name));
+  
   const chartData = basesToShow.map(base => {
     const baseId = base.base_id.toString();
     const baseMetrics = metrics[baseId] || {
@@ -185,17 +220,24 @@ const Dashboard: React.FC = () => {
       percentChange: 0
     };
     
+    // Log each base's metrics to debug
+    console.log(`Metrics for base ${baseId} (${base.base_name || base.name}):`, baseMetrics);
+    
     return {
-      name: base.base_name || base.name,
+      name: base.base_name || base.name, // Handle both property names
       opening: baseMetrics.openingBalance,
       closing: baseMetrics.closing,
       purchases: baseMetrics.purchases,
       transferIn: baseMetrics.transferIn,
       transferOut: baseMetrics.transferOut,
-      assigned: baseMetrics.assigned
+      assigned: baseMetrics.assigned,
+      expended: baseMetrics.expended
     };
   });
-
+  
+  console.log('Chart data prepared:', chartData);
+  
+  // Show loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -204,6 +246,7 @@ const Dashboard: React.FC = () => {
     );
   }
   
+  // Show error state
   if (error) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -220,7 +263,8 @@ const Dashboard: React.FC = () => {
       </div>
     );
   }
-
+  
+  // Get active metrics or default empty values
   const activeMetrics = metrics[activeBaseId] || {
     openingBalance: 0,
     closing: 0,
@@ -254,8 +298,8 @@ const Dashboard: React.FC = () => {
         
         <MetricsCard 
           title="Net Movement" 
-          value={activeMetrics.netMovement}
-          previousValue={0}
+          value={activeMetrics.netMovement} 
+          previousValue={0} 
           percentChange={activeMetrics.percentChange.toFixed(1)}
           icon={<TrendingUp size={24} className="text-olive-600" />} 
           color="border-olive-600" 
@@ -272,7 +316,7 @@ const Dashboard: React.FC = () => {
         <MetricsCard 
           title="Closing Balance" 
           value={activeMetrics.closing} 
-          previousValue={activeMetrics.openingBalance}
+          previousValue={activeMetrics.openingBalance} 
           percentChange={activeMetrics.percentChange.toFixed(1)}
           icon={<BarChart3 size={24} className="text-green-600" />} 
           color="border-green-600" 
